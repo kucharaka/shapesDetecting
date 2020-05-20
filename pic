@@ -1,0 +1,53 @@
+import cv2
+import numpy as np
+import math
+
+path = #UR PATH
+image = cv2.imread(path)
+imageContour = image.copy()
+imageGray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+imageBlur = cv2.GaussianBlur(imageGray, (51, 51), 1)
+imageCanny = cv2.Canny(imageBlur, 50, 100)
+contours, hierarchy = cv2.findContours(imageCanny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+for cnt in contours:
+    area = cv2.contourArea(cnt)
+    if area > 200:
+        cv2.drawContours(imageContour, cnt, -1, (255, 0, 0), 3)
+        perimeter = cv2.arcLength(cnt, True)
+        approx = cv2.approxPolyDP(cnt, 0.02 * perimeter, True)
+        objCor = len(approx)
+        x, y, w, h = cv2.boundingRect(approx)
+        if objCor == 3:
+            objType = 'Tri'
+        elif objCor == 4:
+            rect = cv2.minAreaRect(cnt)
+            box = np.int0(cv2.boxPoints(rect))
+            b = abs(box[3] - box[0])
+            c = abs(box[3] - box[2])
+            d = abs(box[2] - box[1])
+            angle = np.int0((math.acos((b[0]) / (((b[0] ** 2) + (b[1] ** 2)) ** 0.5))) * 57.3)
+            if angle == 90:
+                angle = 0
+            asp = abs((((c[0] ** 2) + (c[1] ** 2)) ** 0.5)) / abs((((d[0] ** 2) + (d[1] ** 2)) ** 0.5))
+            if (asp > 0.95) and (asp < 1.05):
+                objType = 'Square'
+            else:
+                objType = 'Rect'
+        elif objCor == 8:
+            radius = (area / 3.14) ** 0.5
+            if (0.94 * perimeter < 6.28 * radius) and (1.06 * perimeter > 6.28 * radius):
+                objType = 'Circle'
+            else:
+                objType = 'Ellipse'
+        else:
+            objType = ' '
+        cv2.rectangle(imageContour, (x, y), (x + w, y + h), (0, 0, 0), 2)
+        if objCor == 4:
+            cv2.putText(imageContour, '%s %i град' % (objType, angle),
+                        (x + w//6, y + h//2), cv2.FONT_HERSHEY_COMPLEX, 0.4, (0, 0, 0))
+        else:
+            cv2.putText(imageContour, objType,
+                        (x + w//6, y + h//2), cv2.FONT_HERSHEY_COMPLEX, 0.4, (0, 0, 0))
+
+cv2.imshow('', imageContour)
+cv2.waitKey(0)

@@ -43,7 +43,7 @@ for cnt in contours:
             objType = ' '
         cv2.rectangle(imageContour, (x, y), (x + w, y + h), (0, 0, 0), 2)
         if objCor == 4:
-            cv2.putText(imageContour, '%s %i град' % (objType, angle),
+            cv2.putText(imageContour, '%s %i deg' % (objType, angle),
                         (x + w//6, y + h//2), cv2.FONT_HERSHEY_COMPLEX, 0.4, (0, 0, 0))
         else:
             cv2.putText(imageContour, objType,
